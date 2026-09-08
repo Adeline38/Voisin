@@ -23,5 +23,7 @@
 /assets/vendor/
 
 ###< symfony/asset-mapper ###
+/.vscode/
+/documents/conceptualisation/specifications
 /documents/cours/
 AGENTS.md
