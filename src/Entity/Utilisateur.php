@@ -88,6 +88,9 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Like::class, mappedBy: 'utilisateur')]
     private Collection $likes;
 
+    #[ORM\Column]
+    private ?bool $est_en_ligne = null;
+
     public function __construct()
     {
         $this->publications = new ArrayCollection();
@@ -434,6 +437,18 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
                 $like->setUtilisateur(null);
             }
         }
+
+        return $this;
+    }
+
+    public function isEstEnLigne(): ?bool
+    {
+        return $this->est_en_ligne;
+    }
+
+    public function setEstEnLigne(bool $est_en_ligne): static
+    {
+        $this->est_en_ligne = $est_en_ligne;
 
         return $this;
     }
