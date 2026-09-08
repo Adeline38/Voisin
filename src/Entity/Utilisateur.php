@@ -52,9 +52,51 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Publication::class, mappedBy: 'utilisateur')]
     private Collection $publications;
 
+    /**
+     * @var Collection<int, DemandeAmi>
+     */
+    #[ORM\OneToMany(targetEntity: DemandeAmi::class, mappedBy: 'utilisateur_demandeur')]
+    private Collection $demandeAmis;
+
+    /**
+     * @var Collection<int, DemandeAmi>
+     */
+    #[ORM\OneToMany(targetEntity: DemandeAmi::class, mappedBy: 'utilisateur_receveur')]
+    private Collection $reponseDemandeAmis;
+
+    /**
+     * @var Collection<int, AutorisationAmi>
+     */
+    #[ORM\OneToMany(targetEntity: AutorisationAmi::class, mappedBy: 'utilisateur')]
+    private Collection $autorisationAmis;
+
+    /**
+     * @var Collection<int, AutorisationAmi>
+     */
+    #[ORM\OneToMany(targetEntity: AutorisationAmi::class, mappedBy: 'utilisateur_ami')]
+    private Collection $autorisationAmisAcceptee;
+
+    /**
+     * @var Collection<int, Commentaire>
+     */
+    #[ORM\OneToMany(targetEntity: Commentaire::class, mappedBy: 'utilisateur')]
+    private Collection $commentaires;
+
+    /**
+     * @var Collection<int, Like>
+     */
+    #[ORM\OneToMany(targetEntity: Like::class, mappedBy: 'utilisateur')]
+    private Collection $likes;
+
     public function __construct()
     {
         $this->publications = new ArrayCollection();
+        $this->demandeAmis = new ArrayCollection();
+        $this->reponseDemandeAmis = new ArrayCollection();
+        $this->autorisationAmis = new ArrayCollection();
+        $this->autorisationAmisAcceptee = new ArrayCollection();
+        $this->commentaires = new ArrayCollection();
+        $this->likes = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -210,6 +252,186 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($publication->getUtilisateur() === $this) {
                 $publication->setUtilisateur(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, DemandeAmi>
+     */
+    public function getDemandeAmis(): Collection
+    {
+        return $this->demandeAmis;
+    }
+
+    public function addDemandeAmi(DemandeAmi $demandeAmi): static
+    {
+        if (!$this->demandeAmis->contains($demandeAmi)) {
+            $this->demandeAmis->add($demandeAmi);
+            $demandeAmi->setUtilisateurDemandeur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDemandeAmi(DemandeAmi $demandeAmi): static
+    {
+        if ($this->demandeAmis->removeElement($demandeAmi)) {
+            // set the owning side to null (unless already changed)
+            if ($demandeAmi->getUtilisateurDemandeur() === $this) {
+                $demandeAmi->setUtilisateurDemandeur(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, DemandeAmi>
+     */
+    public function getReponseDemandeAmis(): Collection
+    {
+        return $this->reponseDemandeAmis;
+    }
+
+    public function addReponseDemandeAmi(DemandeAmi $reponseDemandeAmi): static
+    {
+        if (!$this->reponseDemandeAmis->contains($reponseDemandeAmi)) {
+            $this->reponseDemandeAmis->add($reponseDemandeAmi);
+            $reponseDemandeAmi->setUtilisateurReceveur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReponseDemandeAmi(DemandeAmi $reponseDemandeAmi): static
+    {
+        if ($this->reponseDemandeAmis->removeElement($reponseDemandeAmi)) {
+            // set the owning side to null (unless already changed)
+            if ($reponseDemandeAmi->getUtilisateurReceveur() === $this) {
+                $reponseDemandeAmi->setUtilisateurReceveur(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, AutorisationAmi>
+     */
+    public function getAutorisationAmis(): Collection
+    {
+        return $this->autorisationAmis;
+    }
+
+    public function addAutorisationAmi(AutorisationAmi $autorisationAmi): static
+    {
+        if (!$this->autorisationAmis->contains($autorisationAmi)) {
+            $this->autorisationAmis->add($autorisationAmi);
+            $autorisationAmi->setUtilisateur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAutorisationAmi(AutorisationAmi $autorisationAmi): static
+    {
+        if ($this->autorisationAmis->removeElement($autorisationAmi)) {
+            // set the owning side to null (unless already changed)
+            if ($autorisationAmi->getUtilisateur() === $this) {
+                $autorisationAmi->setUtilisateur(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, AutorisationAmi>
+     */
+    public function getAutorisationAmisAcceptee(): Collection
+    {
+        return $this->autorisationAmisAcceptee;
+    }
+
+    public function addAutorisationAmisAcceptee(AutorisationAmi $autorisationAmisAcceptee): static
+    {
+        if (!$this->autorisationAmisAcceptee->contains($autorisationAmisAcceptee)) {
+            $this->autorisationAmisAcceptee->add($autorisationAmisAcceptee);
+            $autorisationAmisAcceptee->setUtilisateurAmi($this);
+        }
+
+        return $this;
+    }
+
+    public function removeAutorisationAmisAcceptee(AutorisationAmi $autorisationAmisAcceptee): static
+    {
+        if ($this->autorisationAmisAcceptee->removeElement($autorisationAmisAcceptee)) {
+            // set the owning side to null (unless already changed)
+            if ($autorisationAmisAcceptee->getUtilisateurAmi() === $this) {
+                $autorisationAmisAcceptee->setUtilisateurAmi(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Commentaire>
+     */
+    public function getCommentaires(): Collection
+    {
+        return $this->commentaires;
+    }
+
+    public function addCommentaire(Commentaire $commentaire): static
+    {
+        if (!$this->commentaires->contains($commentaire)) {
+            $this->commentaires->add($commentaire);
+            $commentaire->setUtilisateur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCommentaire(Commentaire $commentaire): static
+    {
+        if ($this->commentaires->removeElement($commentaire)) {
+            // set the owning side to null (unless already changed)
+            if ($commentaire->getUtilisateur() === $this) {
+                $commentaire->setUtilisateur(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Like>
+     */
+    public function getLikes(): Collection
+    {
+        return $this->likes;
+    }
+
+    public function addLike(Like $like): static
+    {
+        if (!$this->likes->contains($like)) {
+            $this->likes->add($like);
+            $like->setUtilisateur($this);
+        }
+
+        return $this;
+    }
+
+    public function removeLike(Like $like): static
+    {
+        if ($this->likes->removeElement($like)) {
+            // set the owning side to null (unless already changed)
+            if ($like->getUtilisateur() === $this) {
+                $like->setUtilisateur(null);
             }
         }
 
