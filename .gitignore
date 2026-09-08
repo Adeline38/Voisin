@@ -23,5 +23,6 @@
 /assets/vendor/
 
 ###< symfony/asset-mapper ###
-/documents/cours/
 AGENTS.md
+/documents/cours/
+/documents/conceptualisation/specifications
