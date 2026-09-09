@@ -7,20 +7,35 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
+// Indique à Symfony que cette classe sert à fabriquer des objets "Utilisateur" dans la base de données
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
+
+// Règle de sécurité SQL : Interdit d'avoir deux utilisateurs avec la même adresse email en base de données
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
+
+// Règle de sécurité SQL : Interdit également d'avoir deux utilisateurs avec le même pseudo
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_PSEUDO', fields: ['pseudo'])]
+
+// Barrière de contrôle PHP : Si un visiteur tente de s'inscrire avec un email déjà pris, le formulaire s'arrête et affiche ce message d'erreur poli sans faire planter le site
+#[UniqueEntity(fields: ['email'], message: 'Il existe déjà un compte de voisin avec cette adresse email.')]
+
+// Déclaration de l'identité : explique à Symfony que cette classe représente un "Vrai Membre" (UserInterface) capable de se connecter de manière sécurisée avec un mot de passe (PasswordAuthenticatedUserInterface).
 class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 {
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 180)]
+    #[ORM\Column(length: 255, unique: true)]
+    #[Assert\NotBlank(message: "L'adresse email est obligatoire.")]
+    #[Assert\Email(message: "L'adresse email n'est pas valide (il manque un @ ou l'extension).")]
     private ?string $email = null;
 
     /**
@@ -35,10 +50,15 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\Column(length: 50, unique: true)]
+    #[ORM\Column(length: 255, unique: true)]
+    #[Assert\NotBlank(message: "Le pseudo est obligatoire.")]
     private ?string $pseudo = null;
 
     #[ORM\Column(length: 255)]
+    /* #[Assert\File(
+        maxSize: '200k',
+        extensions: ['jpg', 'png', 'webp'],
+        extensionsMessage: 'Veuillez télécharger un fichier valide (Max 200 Ko, JPG / PNG / WEBP.')] */
     private ?string $photo = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -129,7 +149,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
      */
     public function getUserIdentifier(): string
     {
-        return (string) $this->email;
+        return (string) $this->pseudo;
     }
 
     /**
