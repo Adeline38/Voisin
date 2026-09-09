@@ -7,6 +7,13 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: LikeRepository::class)]
 #[ORM\Table(name: '`like`')]
+#[ORM\UniqueConstraint(
+    name: 'UNIQ_LIKE_UTILISATEUR_PUBLICATION',
+    columns: [
+        'utilisateur_id',
+        'publication_id'
+    ]
+)]
 class Like
 {
     #[ORM\Id]
@@ -19,7 +26,7 @@ class Like
     private ?Utilisateur $utilisateur = null;
 
     #[ORM\ManyToOne(inversedBy: 'likes')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Publication $publication = null;
 
     public function getId(): ?int

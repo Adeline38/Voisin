@@ -24,6 +24,12 @@
 
 ###< symfony/asset-mapper ###
 /.vscode/
-/documents/conceptualisation/specifications
+/documents/audit
+/documents/cahier_des_charges/cahier-des-charges-enrichi.md
+/documents/conceptualisation/specifications/~$*.xlsx
 /documents/cours/
+
 AGENTS.md
+
+/src/Controller/DemandeAmiController.php
+/templates/demande_ami

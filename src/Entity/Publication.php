@@ -16,7 +16,7 @@ class Publication
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(type: Types::TEXT)]
+    #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $contenu = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -63,7 +63,7 @@ class Publication
         return $this->contenu;
     }
 
-    public function setContenu(string $contenu): static
+    public function setContenu(?string $contenu): static
     {
         $this->contenu = $contenu;
 

@@ -6,6 +6,13 @@ use App\Repository\DemandeAmiRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: DemandeAmiRepository::class)]
+#[ORM\UniqueConstraint(
+    name: 'UNIQ_DEMANDE_AMI',
+    columns: [
+        'utilisateur_demandeur_id',
+        'utilisateur_receveur_id'
+    ]
+)]
 class DemandeAmi
 {
     #[ORM\Id]
@@ -27,6 +34,15 @@ class DemandeAmi
     #[ORM\JoinColumn(nullable: false)]
     private ?Utilisateur $utilisateur_receveur = null;
 
+    public const STATUT_EN_ATTENTE = 'en_attente';
+    public const STATUT_REFUSEE = 'refusee';
+
+    public function __construct()
+    {
+        $this->statut = self::STATUT_EN_ATTENTE;
+        $this->date_creation = new \DateTimeImmutable();
+    }
+    
     public function getId(): ?int
     {
         return $this->id;

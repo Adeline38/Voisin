@@ -12,6 +12,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 #[ORM\Entity(repositoryClass: UtilisateurRepository::class)]
 #[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_PSEUDO', fields: ['pseudo'])]
 class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
 {
     #[ORM\Id]
@@ -34,10 +35,10 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column]
     private ?string $password = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 50, unique: true)]
     private ?string $pseudo = null;
 
-    #[ORM\Column(length: 255, nullable: true)]
+    #[ORM\Column(length: 255)]
     private ?string $photo = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
@@ -100,6 +101,8 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         $this->autorisationAmisAcceptee = new ArrayCollection();
         $this->commentaires = new ArrayCollection();
         $this->likes = new ArrayCollection();
+        $this->date_inscription = new \DateTimeImmutable();
+        $this->est_en_ligne = false;
     }
 
     public function getId(): ?int
@@ -200,7 +203,7 @@ class Utilisateur implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->photo;
     }
 
-    public function setPhoto(?string $photo): static
+    public function setPhoto(string $photo): static
     {
         $this->photo = $photo;
 

@@ -6,6 +6,13 @@ use App\Repository\AutorisationAmiRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: AutorisationAmiRepository::class)]
+#[ORM\UniqueConstraint(
+    name: 'UNIQ_AUTORISATION_AMI',
+    columns: [
+        'utilisateur_id',
+        'utilisateur_ami_id'
+    ]
+)]
 class AutorisationAmi
 {
     #[ORM\Id]
