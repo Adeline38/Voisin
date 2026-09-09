@@ -48,11 +48,11 @@ class RegistrationFormType extends AbstractType
                 'label' => 'Photo de profil (Obligatoire)',
                 'required' => true, // Rend le champ graphiquement obligatoire en HTML
                 'constraints' => [
-                    // 1. On force la présence du fichier
+                    // On force la présence du fichier
                     new NotBlank([
                         'message' => 'Veuillez sélectionner une photo de profil.',
                     ]),
-                    // 2. On valide la taille et le format du vrai fichier physique
+                    // On valide la taille et le format du vrai fichier physique
                     new File([
                         'maxSize' => '200k',
                         'mimeTypes' => [
@@ -60,7 +60,7 @@ class RegistrationFormType extends AbstractType
                             'image/png',
                             'image/webp',
                         ],
-                        'mimeTypesMessage' => 'Veuillez télécharger une image valide (Max 200 Ko, JPG, PNG ou WEBP).',
+                        'mimeTypesMessage' => 'Veuillez télécharger une image valide (200 Ko maxi, JPG ou PNG).',
                     ])
                 ],
             ])
@@ -68,7 +68,7 @@ class RegistrationFormType extends AbstractType
                                 'mapped' => false,
                 'constraints' => [
                     new IsTrue(
-                        message: 'Vous acceptez nos conditions.',
+                        message: 'Vous devez accepter nos conditions pour accéder à ce service.',
                     ),
                 ],
             ])

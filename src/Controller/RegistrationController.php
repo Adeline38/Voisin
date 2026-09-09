@@ -6,6 +6,7 @@ use App\Entity\Utilisateur;
 use App\Form\RegistrationFormType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -22,7 +23,7 @@ class RegistrationController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // 1. GESTION DU TÉLÉCHARGEMENT DE LA PHOTO OBLIGATOIRE
+            // GESTION DU TÉLÉCHARGEMENT DE LA PHOTO OBLIGATOIRE
             /** @var UploadedFile $imageFile */
             $imageFile = $form->get('photo')->getData();
 
@@ -40,14 +41,14 @@ class RegistrationController extends AbstractController
                 $user->setPhoto($nomUnique);
             }
 
-            // 2. HACHAGE DU MOT DE PASSE SECRET
+            // HACHAGE DU MOT DE PASSE SECRET
             /** @var string $plainPassword */
             $plainPassword = $form->get('plainPassword')->getData();
 
             // encode the plain password
             $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
 
-            // 3. ENREGISTREMENT AUTOMATIQUE DES AUTRES CHAMPS
+            // ENREGISTREMENT AUTOMATIQUE DES AUTRES CHAMPS
             $user->setDateInscription(new \DateTimeImmutable());
             $user->setEstEnLigne(false); // L'utilisateur n'est pas encore connecté
             $user->setRoles(['ROLE_USER']); // Badge de membre standard obligatoire
@@ -59,7 +60,8 @@ class RegistrationController extends AbstractController
 
             /* Faites tout ce dont vous avez besoin ici, comme envoyer un e-mail */
 
-            // Message flash de succès pour le jury
+            // Message flash de succès
+            // Messages de session spéciaux conçus pour un usage unique : ils disparaissent automatiquement de la session dès qu’ils sont récupérés. Ils sont donc idéaux pour stocker les notifications utilisateur.
             $this->addFlash('success', 'Votre compte a bien été créé ! Vous pouvez maintenant vous connecter.');
 
             // Redirection obligatoire vers la page de connexion
