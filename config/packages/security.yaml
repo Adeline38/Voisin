@@ -9,7 +9,10 @@ security:
         app_user_provider:
             entity:
                 class: App\Entity\Utilisateur
-                property: email
+                # property: email
+                # ou 
+                # property: pseudo
+                # On supprime la ligne "property:", car Symfony va maintenant utiliser loadUserByIdentifier automatiquement.
 
     firewalls:
         dev:
@@ -19,6 +22,20 @@ security:
         main:
             lazy: true
             provider: app_user_provider
+            form_login:
+                login_path: app_connexion
+                check_path: app_connexion
+                enable_csrf: true
+                default_target_path: /
+                # default_target_path: app_demande_ami
+                # default_target_path: app_fil_actualite
+            logout:
+                path: app_deconnexion
+                target: /
+                # target: app_demande_ami
+                # target: app_accueil_public
+                # where to redirect after logout
+                # target: app_any_route
 
             # Activate different ways to authenticate:
             # https://symfony.com/doc/current/security.html#the-firewall
@@ -30,6 +47,18 @@ security:
     access_control:
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
+        # 1. Les pages d'inscription, de connexion et l'accueil public doivent rester accessibles à tous
+        # - { path: ^/login$, roles: PUBLIC_ACCESS }
+        # - { path: ^/register$, roles: PUBLIC_ACCESS }
+        - { path: ^/connexion$, roles: PUBLIC_ACCESS }
+        - { path: ^/inscription$, roles: PUBLIC_ACCESS }
+        - { path: ^/profil/, roles: PUBLIC_ACCESS }
+        - { path: ^/publication/\d+$, roles: PUBLIC_ACCESS }
+        - { path: ^/$, roles: PUBLIC_ACCESS }
+        - { path: ^/, roles: ROLE_USER }
+        
+        # 2. Absolument TOUT le reste du site (fil d'actualité, profils...) nécessite d'être connecté
+        - { path: ^/, roles: ROLE_USER }
 
 when@test:
     security:

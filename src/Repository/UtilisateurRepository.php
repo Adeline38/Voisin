@@ -8,11 +8,15 @@ use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
+use Symfony\Bridge\Doctrine\Security\User\UserLoaderInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @extends ServiceEntityRepository<Utilisateur>
  */
-class UtilisateurRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
+class UtilisateurRepository extends ServiceEntityRepository implements PasswordUpgraderInterface, UserLoaderInterface
+
+
 {
     public function __construct(ManagerRegistry $registry)
     {
@@ -20,7 +24,7 @@ class UtilisateurRepository extends ServiceEntityRepository implements PasswordU
     }
 
     /**
-     * Used to upgrade (rehash) the user's password automatically over time.
+     * Utilisé pour mettre à jour (re-hacher) automatiquement le mot de passe de l'utilisateur au fil du temps
      */
     public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
     {
@@ -31,6 +35,23 @@ class UtilisateurRepository extends ServiceEntityRepository implements PasswordU
         $user->setPassword($newHashedPassword);
         $this->getEntityManager()->persist($user);
         $this->getEntityManager()->flush();
+    }
+
+    /**
+     * Cette fonction permet à Symfony de chercher un utilisateur par son email OU son pseudo
+     */
+    public function loadUserByIdentifier(string $identifier): ?UserInterface
+    {
+        $entityManager = $this->getEntityManager();
+
+        return $entityManager->createQuery(
+            'SELECT u
+             FROM App\Entity\Utilisateur u
+             WHERE u.email = :identifiant 
+             OR u.pseudo = :identifiant'
+        )
+        ->setParameter('identifiant', $identifier)
+        ->getOneOrNullResult();
     }
 
 //    /**
@@ -57,4 +78,14 @@ class UtilisateurRepository extends ServiceEntityRepository implements PasswordU
 //            ->getOneOrNullResult()
 //        ;
 //    }
+
+    /* public function loadUserByIdentifier(string $identifier): ?UserInterface
+    {
+        return $this->createQueryBuilder('u')
+            ->where('u.email = :identifiant')
+            ->orWhere('u.pseudo = :identifiant')
+            ->setParameter('identifiant', $identifier)
+            ->getQuery()
+            ->getOneOrNullResult();
+    } */
 }
