@@ -25,17 +25,17 @@ INSERT INTO `utilisateur` (`id`, `email`, `pseudo`, `password`, `photo`, `biogra
 (5, 'emma@voisin.fr', 'Emma_New', '$2y$13$Vn3RzN64n7oQpE2.95Z8xOm1U.aA4K/i5u9l1mOUp5rRkXjQ1LJy2', 'sarah.jpg', 'Nouvelle arrivée dans la résidence. Hâte de faire votre connaissance !', '2026-09-08 15:00:00', 0, '["ROLE_USER"]');
 
 -- -----------------------------------------------------------------------------
--- 3. INSERTION DES PUBLICATIONS (Public et Friends)
+-- 3. INSERTION DES PUBLICATIONS (Public et Privé)
 -- -----------------------------------------------------------------------------
 INSERT INTO `publication` (`id`, `contenu`, `photo`, `visibilite`, `date_creation`, `date_modification`, `utilisateur_id`) VALUES
 (1, 'Bonjour à tous ! Ravi de rejoindre le réseau Voisin. Quelqu''un aurait une perceuse à me prêter pour ce week-end ?', NULL, 'public', '2026-09-02 14:00:00', NULL, 1),
 (2, 'Avis aux gourmands : il me reste 5 baguettes et 3 croissants suite à la fournée de ce midi. A venir chercher avant la fermeture !', 'croissants.jpg', 'public', '2026-09-03 18:30:00', NULL, 4),
 (3, 'Superbe fête des voisins hier soir dans le parc ! Merci à tous pour votre bonne humeur.', 'fete.jpg', 'public', '2026-09-07 10:00:00', NULL, 2),
 (4, 'Est-ce que quelqu''un a perdu un chat roux vers la rue des Fleurs ? Il a un collier bleu.', 'fete.jpg', 'public', '2026-09-08 09:00:00', NULL, 3),
-(5, '[Réservé aux Amis] Barbecue improvisé chez moi ce soir à partir de 19h. Amenez vos grillades, je m''occupe des boissons !', 'fete.jpg', 'friends', '2026-09-08 11:00:00', NULL, 1),
-(6, '[Réservé aux Amis] Je pars en vacances une semaine. Les clés sont chez Adeline si besoin d''arroser les plantes.', 'fete.jpg', 'friends', '2026-09-08 12:00:00', NULL, 2),
-(7, '[Réservé aux Amis] Quelqu''un pour m''aider à porter un canapé demain après-midi ? Ça prendra 10 minutes.', 'fete.jpg', 'friends', '2026-09-08 13:15:00', NULL, 3),
-(8, '[Réservé aux Amis] Session code sur le balcon. Le projet Symfony avance bien !', 'fete.jpg', 'friends', '2026-09-08 16:00:00', NULL, 1);
+(5, '[Réservé aux Amis] Barbecue improvisé chez moi ce soir à partir de 19h. Amenez vos grillades, je m''occupe des boissons !', 'fete.jpg', 'prive', '2026-09-08 11:00:00', NULL, 1),
+(6, '[Réservé aux Amis] Je pars en vacances une semaine. Les clés sont chez Adeline si besoin d''arroser les plantes.', 'fete.jpg', 'prive', '2026-09-08 12:00:00', NULL, 2),
+(7, '[Réservé aux Amis] Quelqu''un pour m''aider à porter un canapé demain après-midi ? Ça prendra 10 minutes.', 'fete.jpg', 'prive', '2026-09-08 13:15:00', NULL, 3),
+(8, '[Réservé aux Amis] Session code sur le balcon. Le projet Symfony avance bien !', 'fete.jpg', 'prive', '2026-09-08 16:00:00', NULL, 1);
 
 -- -----------------------------------------------------------------------------
 -- 4. INSERTION DES DEMANDES D'AMI

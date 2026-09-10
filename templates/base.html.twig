@@ -2,8 +2,9 @@
 <html>
     <head>
         <meta charset="UTF-8">
-        <title>{% block title %}Bienvenue!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{% block title %}Voisin{% endblock %}</title>
+        <link rel="icon" href="{{ asset('img/00-logo.png') }}">
         {% block stylesheets %}
         {% endblock %}
 
@@ -21,24 +22,72 @@
 
     <body>
 
-        <div class="flash-messages-container" style="max-width: 600px; margin: 20px auto; padding: 0 10px;">
-            {# BOUCLE UNIVERSELLE SYMFONY : Lit tous les types de messages d'un coup #}
-            {% for label, messages in app.flashes %}
-                {% for message in messages %}
-                    <div class="alert alert-{{ label }}" style="padding: 12px 20px; border-radius: 4px; margin-bottom: 10px; font-weight: bold; 
-                        {% if label == 'success' %} background-color: #d4edda; background-color: #ffffff; color: #006400
-                        ; border: 1px solid #c3e6cb; {% endif %}
-                        {% if label == 'danger' %} background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; {% endif %}">
-                        
-                        {# Petit logo selon le message #}
-                        {% if label == 'success' %} 🎉 {% endif %}
-                        {% if label == 'danger' %} ⚠️ {% endif %}
-                        
-                        {{ message }}
-                    </div>
+        <header class="entete-site">
+            <nav class="navigation-superieure" aria-label="Navigation principale">
+                <a class="lien-logo" href="{{ path('app_accueil_public') }}" aria-label="Accueil Voisin">
+                    <img class="logo-navigation" src="{{ asset('img/00-logo.png') }}" alt="Voisin">
+                </a>
+
+                <div class="navigation-actions">
+                    {% if app.user %}
+                        {% set photoNavigation = app.user.photo %}
+                        {% if photoNavigation starts with 'public/' %}
+                            {% set photoNavigation = photoNavigation|slice(7) %}
+                        {% elseif '/' not in photoNavigation %}
+                            {% set photoNavigation = 'uploads/' ~ photoNavigation %}
+                        {% endif %}
+
+                        <a class="bouton bouton-secondaire" href="{{ path('app_deconnexion') }}">
+                            Se déconnecter
+                        </a>
+                        <a class="bouton bouton-principal" href="{{ path('app_fil_actualite') }}">
+                            Fil d'actualité
+                        </a>
+                        <a
+                            class="lien-avatar-navigation"
+                            href="{{ path('app_utilisateur_modifier') }}"
+                            title="Modifier mon profil"
+                            aria-label="Modifier mon profil"
+                        >
+                            <img
+                                class="avatar-navigation"
+                                src="{{ asset(photoNavigation) }}"
+                                alt="Photo de profil de {{ app.user.pseudo }}"
+                                onerror="this.src='{{ asset('img/profil-standard.jpg') }}'"
+                            >
+                        </a>
+                    {% else %}
+                        <a class="bouton bouton-secondaire" href="{{ path('app_connexion') }}">
+                            Se connecter
+                        </a>
+                        <a class="bouton bouton-principal" href="{{ path('app_inscription') }}">
+                            Créer un compte
+                        </a>
+                    {% endif %}
+                </div>
+            </nav>
+        </header>
+
+        <main>
+            <div class="flash-messages-container" style="max-width: 600px; margin: 20px auto; padding: 0 10px;">
+                {# BOUCLE UNIVERSELLE SYMFONY : Lit tous les types de messages d'un coup #}
+                {% for label, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ label }}" style="padding: 12px 20px; border-radius: 4px; margin-bottom: 10px; font-weight: bold; 
+                            {% if label == 'success' %} background-color: #d4edda; background-color: #ffffff; color: #006400
+                            ; border: 1px solid #c3e6cb; {% endif %}
+                            {% if label == 'danger' %} background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; {% endif %}">
+                            
+                            {# Petit logo selon le message #}
+                            {% if label == 'success' %} 🎉 {% endif %}
+                            {% if label == 'danger' %} ⚠️ {% endif %}
+                            
+                            {{ message }}
+                        </div>
+                    {% endfor %}
                 {% endfor %}
-            {% endfor %}
-        </div>
+            </div>
+        </main>
 
         {# Le reste de votre fichier ne change pas : #}
         {% block body %}{% endblock %}

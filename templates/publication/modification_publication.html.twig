@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modification de la publication{% endblock %}
+
+{% block body %}
+    <h1>Modifier la publication</h1>
+
+    {{ form_start(formulairePublication) }}
+        {{ form_row(formulairePublication.contenu) }}
+        {{ form_row(formulairePublication.visibilite) }}
+        {{ form_row(formulairePublication.photoFichier) }}
+
+        {% if publication.photo %}
+            <p>Photo actuelle :</p>
+            <img
+                src="{{ asset('uploads/' ~ publication.photo) }}"
+                alt="Photo actuelle de la publication"
+                style="max-width: 300px;"
+            >
+
+            <label>
+                <input type="checkbox" name="supprimer_photo" value="1">
+                Supprimer la photo actuelle
+            </label>
+        {% endif %}
+
+        <button type="submit">Enregistrer les modifications</button>
+    {{ form_end(formulairePublication) }}
+
+    <a href="{{ path('app_fil_actualite') }}">Retour au fil d'actualité</a>
+{% endblock %}

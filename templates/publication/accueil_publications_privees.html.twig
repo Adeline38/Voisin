@@ -1,0 +1,66 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Fil d'actualité{% endblock %}
+
+{% block body %}
+    <h1>Fil d'actualité</h1>
+
+    <section>
+        <h2>Créer une publication</h2>
+
+        {{ form_start(formulairePublication) }}
+            {{ form_row(formulairePublication.contenu) }}
+            {{ form_row(formulairePublication.visibilite) }}
+            {{ form_row(formulairePublication.photoFichier) }}
+
+            <button type="submit">Publier</button>
+        {{ form_end(formulairePublication) }}
+    </section>
+
+    <section>
+        <h2>Publications visibles</h2>
+
+        {% for publication in publications %}
+            <article>
+                <h3>{{ publication.utilisateur.pseudo }}</h3>
+
+                {% if publication.contenu %}
+                    <p>{{ publication.contenu }}</p>
+                {% endif %}
+
+                {% if publication.photo %}
+                    <img
+                        src="{{ asset('uploads/' ~ publication.photo) }}"
+                        alt="Photo de la publication"
+                        style="max-width: 300px;"
+                    >
+                {% endif %}
+
+                <p>
+                    Visibilité :
+                    {% if publication.visibilite == 'public' %}
+                        Publique
+                    {% else %}
+                        Amis uniquement
+                    {% endif %}
+                </p>
+
+                {% if publication.dateCreation %}
+                    <p>Publiée le {{ publication.dateCreation|date('d/m/Y à H:i') }}</p>
+                {% endif %}
+
+                <a href="{{ path('app_publication_detail', {'id': publication.id}) }}">
+                    Voir la publication
+                </a>
+
+                {% if app.user == publication.utilisateur %}
+                    <a href="{{ path('app_publication_modifier', {'id': publication.id}) }}">
+                        Modifier
+                    </a>
+                {% endif %}
+            </article>
+        {% else %}
+            <p>Aucune publication visible pour le moment.</p>
+        {% endfor %}
+    </section>
+{% endblock %}

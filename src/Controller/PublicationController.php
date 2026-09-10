@@ -3,165 +3,210 @@
 namespace App\Controller;
 
 use App\Entity\Publication;
+use App\Entity\Utilisateur;
 use App\Form\PublicationType;
 use App\Repository\PublicationRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
-#[Route('/publication')]
 final class PublicationController extends AbstractController
 {
-    #[Route(name: 'app_publication_index', methods: ['GET'])]
-    public function index(PublicationRepository $publicationRepository): Response
-    {
-        return $this->render('publication/index.html.twig', [
-            'publications' => $publicationRepository->findAll(),
-        ]);
-    }
+    #[Route('/fil-actualite', name: 'app_fil_actualite', methods: ['GET', 'POST'])]
+    public function filActualite(
+        Request $request,
+        PublicationRepository $publicationRepository,
+        EntityManagerInterface $entityManager
+    ): Response {
+        $utilisateur = $this->getUser();
 
-    #[Route('/new', name: 'app_publication_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
-    {
-        $publication = new Publication();
-        $form = $this->createForm(PublicationType::class, $publication);
-        $form->handleRequest($request);
+        if (!$utilisateur instanceof Utilisateur) {
+            throw $this->createAccessDeniedException('Vous devez être connecté.');
+        }
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            // SÉCURITÉ : On attribue de force l'auteur connecté sans laisser le choix au formulaire
-            $publication->setUtilisateur($this->getUser());
-            $publication->setDateCreation(new \DateTimeImmutable());
+        $nouvellePublication = new Publication();
+        $formulaire = $this->createForm(PublicationType::class, $nouvellePublication);
+        $formulaire->handleRequest($request);
 
-            $imageFile = $form->get('image_upload')->getData();
-            if ($imageFile) {
-                $nomUnique = uniqid() . '.' . $imageFile->guessExtension();
-                $cheminDossierPublic = $this->getParameter('kernel.project_dir') . '/public/uploads';
-                $imageFile->move($cheminDossierPublic, $nomUnique);
-                $publication->setPhoto($nomUnique);
+        if ($formulaire->isSubmitted()) {
+            $contenu = $nouvellePublication->getContenu();
+            $fichierPhoto = $formulaire->get('photoFichier')->getData();
+
+            $contenuEstVide = $contenu === null;
+            if ($contenu !== null) {
+                $contenuEstVide = trim($contenu) === '';
             }
 
-            $entityManager->persist($publication);
+            if ($contenuEstVide && $fichierPhoto === null) {
+                $formulaire->addError(
+                    new FormError('Ajoutez un texte, une image, ou les deux.')
+                );
+            }
+        }
+
+        if ($formulaire->isSubmitted() && $formulaire->isValid()) {
+            $nouvellePublication->setUtilisateur($utilisateur);
+            $nouvellePublication->setDateCreation(new \DateTimeImmutable());
+
+            $fichierPhoto = $formulaire->get('photoFichier')->getData();
+            if ($fichierPhoto instanceof UploadedFile) {
+                $nomPhoto = $this->enregistrerPhoto($fichierPhoto);
+                $nouvellePublication->setPhoto($nomPhoto);
+            }
+
+            $entityManager->persist($nouvellePublication);
             $entityManager->flush();
 
-            $this->addFlash('success', 'Votre publication a bien été partagée !');
-            return $this->redirectToRoute('app_publication_index', [], Response::HTTP_SEE_OTHER);
+            $this->addFlash('success', 'Votre publication a bien été partagée.');
+
+            return $this->redirectToRoute('app_fil_actualite');
         }
 
-        return $this->render('publication/new.html.twig', [
-            'publication' => $publication,
-            'form' => $form->createView(),
+        return $this->render('publication/accueil_publications_privees.html.twig', [
+            'publications' => $publicationRepository->findVisiblesSansAmitie($utilisateur),
+            'formulairePublication' => $formulaire,
         ]);
     }
 
-    #[Route('/{id}', name: 'app_publication_show', methods: ['GET'])]
-    public function show(Publication $publication): Response
+    #[Route('/publication/{id}', name: 'app_publication_detail', methods: ['GET'])]
+    public function detail(Publication $publication): Response
     {
-        return $this->render('publication/show.html.twig', [
+        $utilisateur = $this->getUser();
+        $estAuteur = $utilisateur instanceof Utilisateur
+            && $publication->getUtilisateur() === $utilisateur;
+
+        if ($publication->getVisibilite() !== 'public' && !$estAuteur) {
+            throw $this->createAccessDeniedException(
+                'Cette publication est réservée à son auteur et à ses amis.'
+            );
+        }
+
+        return $this->render('publication/commentaires_publication.html.twig', [
             'publication' => $publication,
         ]);
     }
 
-    #[Route('/{id}/edit', name: 'app_publication_edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Publication $publication, EntityManagerInterface $entityManager): Response
-    {
-        // ❌ SÉCURITÉ PIRATAGE URL : Si le connecté n'est pas l'auteur, on bloque immédiatement (Erreur 403 Access Denied)
+    #[Route('/publication/{id}/modifier', name: 'app_publication_modifier', methods: ['GET', 'POST'])]
+    public function modifier(
+        Request $request,
+        Publication $publication,
+        EntityManagerInterface $entityManager
+    ): Response {
         if ($publication->getUtilisateur() !== $this->getUser()) {
-            throw $this->createAccessDeniedException("Sécurité Examen : Vous n'avez pas le droit de modifier la publication d'un autre utilisateur !");
+            throw $this->createAccessDeniedException(
+                'Vous ne pouvez pas modifier la publication d’un autre utilisateur.'
+            );
         }
 
-        $form = $this->createForm(PublicationType::class, $publication);
+        $formulaire = $this->createForm(PublicationType::class, $publication);
+        $formulaire->handleRequest($request);
 
-        if ($request->isMethod('POST')) {
-            $donneesFormulaire = $request->request->all('publication');
-            $texteBrut = $donneesFormulaire['contenu'] ?? '';
-            $veutSupprimerImage = $request->request->get('supprimer_image_brute') === '1';
-            
-            $fichiersDonnees = $request->files->all('publication');
-            $nouvelleImage = $fichiersDonnees['image_upload'] ?? null;
+        if ($formulaire->isSubmitted()) {
+            $contenu = $publication->getContenu();
+            $nouvellePhoto = $formulaire->get('photoFichier')->getData();
+            $supprimerPhoto = $request->getPayload()->getString('supprimer_photo') === '1';
 
-            // CALCUL DE LA PHOTO FINALE
-            $auraUnePhotoApresSoumission = false;
-            if ($publication->getPhoto() !== null && $veutSupprimerImage === false) {
-                $auraUnePhotoApresSoumission = true;
-            }
-            if ($nouvelleImage !== null) {
-                $auraUnePhotoApresSoumission = true;
+            $contenuEstVide = $contenu === null;
+            if ($contenu !== null) {
+                $contenuEstVide = trim($contenu) === '';
             }
 
-            // BARRIÈRE DU CAHIER DES CHARGES : TOUT VIDE INTERDIT
-            if (empty(trim($texteBrut)) && $auraUnePhotoApresSoumission === false) {
-                return $this->render('publication/edit.html.twig', [
-                    'publication' => $publication,
-                    'form' => $form->createView(),
-                    'message_erreur' => 'Sécurité Examen : Une publication doit obligatoirement contenir du texte ou une image. Vous ne pouvez pas vider entièrement ce message.'
-                ]);
+            $photoSeraPresente = $publication->getPhoto() !== null && !$supprimerPhoto;
+            if ($nouvellePhoto instanceof UploadedFile) {
+                $photoSeraPresente = true;
+            }
+
+            if ($contenuEstVide && !$photoSeraPresente) {
+                $formulaire->addError(
+                    new FormError('Conservez au moins un texte ou une image.')
+                );
             }
         }
 
-        $form->handleRequest($request);
+        if ($formulaire->isSubmitted() && $formulaire->isValid()) {
+            $nouvellePhoto = $formulaire->get('photoFichier')->getData();
+            $supprimerPhoto = $request->getPayload()->getString('supprimer_photo') === '1';
 
-        if ($form->isSubmitted() && $form->isValid()) {
+            if ($supprimerPhoto || $nouvellePhoto instanceof UploadedFile) {
+                $this->supprimerPhoto($publication);
+                $publication->setPhoto(null);
+            }
+
+            if ($nouvellePhoto instanceof UploadedFile) {
+                $nomPhoto = $this->enregistrerPhoto($nouvellePhoto);
+                $publication->setPhoto($nomPhoto);
+            }
+
             $publication->setDateModification(new \DateTime());
-
-            $veutSupprimerFinal = $request->request->get('supprimer_image_brute') === '1';
-            $nouvelleImageFinale = $form->get('image_upload')->getData();
-
-            if ($veutSupprimerFinal === true) {
-                if ($publication->getPhoto()) {
-                    $cheminFichierPhysique = $this->getParameter('kernel.project_dir') . '/public/uploads/' . $publication->getPhoto();
-                    if (file_exists($cheminFichierPhysique)) {
-                        unlink($cheminFichierPhysique);
-                    }
-                    $publication->setPhoto(null);
-                }
-            }
-
-            if ($nouvelleImageFinale) {
-                $nomUnique = uniqid() . '.' . $nouvelleImageFinale->guessExtension();
-                $nouvelleImageFinale->move($this->getParameter('kernel.project_dir') . '/public/uploads', $nomUnique);
-                $publication->setPhoto($nomUnique);
-            }
-
             $entityManager->flush();
 
-            $this->addFlash('success', 'Votre publication a été modifiée avec succès.');
-            return $this->redirectToRoute('app_publication_index', [], Response::HTTP_SEE_OTHER);
+            $this->addFlash('success', 'Votre publication a été modifiée.');
+
+            return $this->redirectToRoute('app_fil_actualite');
         }
 
-        return $this->render('publication/edit.html.twig', [
+        return $this->render('publication/modification_publication.html.twig', [
             'publication' => $publication,
-            'form' => $form->createView(),
+            'formulairePublication' => $formulaire,
         ]);
     }
 
-    #[Route('/{id}', name: 'app_publication_delete', methods: ['POST'])]
-    public function delete(Request $request, Publication $publication, EntityManagerInterface $entityManager): Response
-    {
-        // ❌ SÉCURITÉ PIRATAGE URL : Si le connecté n'est pas l'auteur, interdiction d'effacer
+    #[Route('/publication/{id}/supprimer', name: 'app_publication_supprimer', methods: ['POST'])]
+    public function supprimer(
+        Request $request,
+        Publication $publication,
+        EntityManagerInterface $entityManager
+    ): Response {
         if ($publication->getUtilisateur() !== $this->getUser()) {
-            throw $this->createAccessDeniedException("Sécurité Examen : Vous n'êtes pas le propriétaire de ce message !");
+            throw $this->createAccessDeniedException(
+                'Vous ne pouvez pas supprimer la publication d’un autre utilisateur.'
+            );
         }
 
-        // ❌ SÉCURITÉ JETON CSRF : On valide le badge secret inclus dans le bouton pour prouver que l'ordre vient bien de notre site [8]
-        $tokenID = 'delete' . $publication->getId();
-        $tokenValeur = $request->getPayload()->getString('_token');
-        
-        if ($this->isCsrfTokenValid($tokenID, $tokenValeur)) {
-            // Nettoyage de la photo dans le disque dur avant de détruire la ligne SQL
-            if ($publication->getPhoto()) {
-                $cheminFichierPhysique = $this->getParameter('kernel.project_dir') . '/public/uploads/' . $publication->getPhoto();
-                if (file_exists($cheminFichierPhysique)) {
-                    unlink($cheminFichierPhysique);
-                }
-            }
+        $jeton = $request->getPayload()->getString('_token');
+        $identifiantJeton = 'supprimer_publication_'.$publication->getId();
 
-            $entityManager->remove($publication);
-            $entityManager->flush();
-            $this->addFlash('success', 'La publication a été définitivement supprimée.');
+        if (!$this->isCsrfTokenValid($identifiantJeton, $jeton)) {
+            throw $this->createAccessDeniedException('Jeton de sécurité invalide.');
         }
 
-        return $this->redirectToRoute('app_publication_index', [], Response::HTTP_SEE_OTHER);
+        $this->supprimerPhoto($publication);
+        $entityManager->remove($publication);
+        $entityManager->flush();
+
+        $this->addFlash('success', 'La publication a été supprimée.');
+
+        return $this->redirectToRoute('app_fil_actualite');
+    }
+
+    private function enregistrerPhoto(UploadedFile $fichierPhoto): string
+    {
+        $extension = $fichierPhoto->guessExtension();
+        $nomPhoto = bin2hex(random_bytes(16)).'.'.$extension;
+        $dossier = (string) $this->getParameter('kernel.project_dir').'/public/uploads';
+
+        $fichierPhoto->move($dossier, $nomPhoto);
+
+        return $nomPhoto;
+    }
+
+    private function supprimerPhoto(Publication $publication): void
+    {
+        $nomPhoto = $publication->getPhoto();
+
+        if ($nomPhoto === null) {
+            return;
+        }
+
+        $cheminPhoto = (string) $this->getParameter('kernel.project_dir')
+            .'/public/uploads/'.$nomPhoto;
+
+        if (is_file($cheminPhoto)) {
+            unlink($cheminPhoto);
+        }
     }
 }

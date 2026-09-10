@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modifier mon profil{% endblock %}
+
+{% block body %}
+    {% set photoProfil = utilisateur.photo %}
+    {% if photoProfil starts with 'public/' %}
+        {% set photoProfil = photoProfil|slice(7) %}
+    {% elseif '/' not in photoProfil %}
+        {% set photoProfil = 'uploads/' ~ photoProfil %}
+    {% endif %}
+
+    <main class="page-formulaire">
+        <section class="carte-formulaire">
+            <h1>Modifier mon profil</h1>
+
+            <img
+                class="apercu-profil"
+                src="{{ asset(photoProfil) }}"
+                alt="Photo de profil de {{ utilisateur.pseudo }}"
+                onerror="this.src='{{ asset('img/profil-standard.jpg') }}'"
+            >
+
+            {{ form_start(formulaireUtilisateur) }}
+                {{ form_row(formulaireUtilisateur.biographie) }}
+                {{ form_row(formulaireUtilisateur.photoFichier) }}
+
+                <p class="aide-formulaire">Formats acceptés : JPG ou PNG, 2 Mo maximum.</p>
+
+                <button class="bouton bouton-principal" type="submit">
+                    Enregistrer les modifications
+                </button>
+            {{ form_end(formulaireUtilisateur) }}
+
+            <a href="{{ path('app_fil_actualite') }}">Retour au fil d'actualité</a>
+        </section>
+    </main>
+{% endblock %}

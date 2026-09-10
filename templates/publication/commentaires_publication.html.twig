@@ -1,0 +1,42 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Détail de la publication{% endblock %}
+
+{% block body %}
+    <article>
+        <h1>Publication de {{ publication.utilisateur.pseudo }}</h1>
+
+        {% if publication.contenu %}
+            <p>{{ publication.contenu }}</p>
+        {% endif %}
+
+        {% if publication.photo %}
+            <img
+                src="{{ asset('uploads/' ~ publication.photo) }}"
+                alt="Photo de la publication"
+                style="max-width: 500px;"
+            >
+        {% endif %}
+
+        {% if publication.dateCreation %}
+            <p>Publiée le {{ publication.dateCreation|date('d/m/Y à H:i') }}</p>
+        {% endif %}
+
+        {% if app.user == publication.utilisateur %}
+            <a href="{{ path('app_publication_modifier', {'id': publication.id}) }}">
+                Modifier
+            </a>
+
+            {{ include('publication/_formulaire_suppression.html.twig') }}
+        {% endif %}
+    </article>
+
+    <section>
+        <h2>Commentaires</h2>
+        <p>La gestion des commentaires sera ajoutée dans le bonus.</p>
+    </section>
+
+    {% if app.user %}
+        <a href="{{ path('app_fil_actualite') }}">Retour au fil d'actualité</a>
+    {% endif %}
+{% endblock %}

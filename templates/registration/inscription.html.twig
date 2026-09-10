@@ -1,6 +1,6 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Register{% endblock %}
+{% block title %}Inscription{% endblock %}
 
 {% block body %}
     <h1>Inscription</h1>
@@ -11,15 +11,12 @@
         {{ form_row(registrationForm.pseudo) }}
         {{ form_row(registrationForm.email) }}
         {{ form_row(registrationForm.plainPassword, {
-            label: 'Password'
+            label: 'Mot de passe'
         }) }}
         {{ form_row(registrationForm.photo) }}
-        {{ form_row(registrationForm.agreeTerms) }}
 
-        <button type="submit" class="btn">S'incrire</button>
-        
-    {{ form_end(registrationForm) }}         
+        <button type="submit" class="btn">S'inscrire</button>
+    {{ form_end(registrationForm) }}
 
     <p>Vous avez déjà un compte ? <a href="{{ path('app_connexion') }}">Se connecter</a></p>
-
 {% endblock %}

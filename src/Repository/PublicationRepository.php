@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Publication;
+use App\Entity\Utilisateur;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,6 +15,40 @@ class PublicationRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Publication::class);
+    }
+
+    /**
+     * Retourne les publications visibles avant la gestion des amitiés :
+     * les publications publiques et toutes celles du membre connecté.
+     *
+     * @return Publication[]
+     */
+    public function findVisiblesSansAmitie(Utilisateur $utilisateur): array
+    {
+        return $this->createQueryBuilder('publication')
+            ->where('publication.visibilite = :visibilitePublique')
+            ->orWhere('publication.utilisateur = :utilisateur')
+            ->setParameter('visibilitePublique', 'public')
+            ->setParameter('utilisateur', $utilisateur)
+            ->orderBy('publication.date_creation', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Retourne au maximum six publications publiques récentes.
+     *
+     * @return Publication[]
+     */
+    public function findPubliquesRecentes(int $limite = 6): array
+    {
+        return $this->createQueryBuilder('publication')
+            ->where('publication.visibilite = :visibilitePublique')
+            ->setParameter('visibilitePublique', 'public')
+            ->orderBy('publication.date_creation', 'DESC')
+            ->setMaxResults($limite)
+            ->getQuery()
+            ->getResult();
     }
 
 //    /**

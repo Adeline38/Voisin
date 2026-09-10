@@ -1,0 +1,101 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Voisin — Partagez ce qui compte{% endblock %}
+
+{% block body %}
+    <main>
+        <section class="hero-accueil">
+            <div class="hero-contenu">
+                <h1>Chez Voisin<span class="point-orange">.</span><br>Partagez ce qui compte vraiment</h1>
+                <p>Retrouvez vos amis, créez du lien.</p>
+
+                <div class="hero-actions">
+                    {% if app.user %}
+                        <a class="bouton bouton-principal" href="{{ path('app_fil_actualite') }}">
+                            Accéder à mon fil d'actualité
+                        </a>
+                    {% else %}
+                        <a class="bouton bouton-principal" href="{{ path('app_inscription') }}">
+                            Je rejoins la communauté
+                        </a>
+                    {% endif %}
+
+                    <a class="bouton bouton-secondaire" href="#publications">
+                        Voir les publications
+                    </a>
+                </div>
+            </div>
+
+            <img
+                class="hero-image"
+                src="{{ asset('img/01-ecran-accueil.webp') }}"
+                alt="Des voisins réunis et souriants"
+            >
+        </section>
+
+        <section id="publications" class="section-publications">
+            <h2>Ils ont partagé récemment leurs expériences</h2>
+
+            <div class="grille-publications">
+                {% for publication in publications %}
+                    {% set photoAuteur = publication.utilisateur.photo %}
+                    {% if photoAuteur starts with 'public/' %}
+                        {% set photoAuteur = photoAuteur|slice(7) %}
+                    {% elseif '/' not in photoAuteur %}
+                        {% set photoAuteur = 'uploads/' ~ photoAuteur %}
+                    {% endif %}
+
+                    <article class="carte-publication">
+                        <header class="carte-entete">
+                            <img
+                                class="avatar-publication"
+                                src="{{ asset(photoAuteur) }}"
+                                alt="Photo de profil de {{ publication.utilisateur.pseudo }}"
+                                onerror="this.src='{{ asset('img/profil-standard.jpg') }}'"
+                            >
+
+                            <div class="carte-auteur">
+                                <strong>{{ publication.utilisateur.pseudo }}</strong>
+                                {% if publication.dateCreation %}
+                                    <span>{{ publication.dateCreation|date('d/m/Y à H\hi') }}</span>
+                                {% endif %}
+                            </div>
+
+                            <span class="badge-public">◎ Public</span>
+                        </header>
+
+                        {% if publication.contenu %}
+                            <p class="carte-contenu">{{ publication.contenu }}</p>
+                        {% endif %}
+
+                        {% if publication.photo %}
+                            {% set photoPublication = publication.photo %}
+                            {% if photoPublication starts with 'public/' %}
+                                {% set photoPublication = photoPublication|slice(7) %}
+                            {% elseif '/' not in photoPublication %}
+                                {% set photoPublication = 'uploads/' ~ photoPublication %}
+                            {% endif %}
+
+                            <img
+                                class="photo-publication"
+                                src="{{ asset(photoPublication) }}"
+                                alt="Illustration de la publication"
+                            >
+                        {% endif %}
+
+                        <footer class="carte-pied">
+                            <span>♡ {{ publication.likes|length }}</span>
+                            <span>◯ {{ publication.commentaires|length }}</span>
+
+                            <a href="{{ path('app_publication_detail', {'id': publication.id}) }}">
+                                Voir le détail
+                            </a>
+                        </footer>
+                    </article>
+                {% else %}
+                    <p>Aucune publication publique n'est disponible actuellement.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </main>
+{% endblock %}

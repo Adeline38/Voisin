@@ -26,9 +26,7 @@ security:
                 login_path: app_connexion
                 check_path: app_connexion
                 enable_csrf: true
-                default_target_path: /
-                # default_target_path: app_demande_ami
-                # default_target_path: app_fil_actualite
+                default_target_path: app_fil_actualite
             logout:
                 path: app_deconnexion
                 target: /
@@ -48,16 +46,12 @@ security:
         # - { path: ^/admin, roles: ROLE_ADMIN }
         # - { path: ^/profile, roles: ROLE_USER }
         # 1. Les pages d'inscription, de connexion et l'accueil public doivent rester accessibles à tous
-        # - { path: ^/login$, roles: PUBLIC_ACCESS }
-        # - { path: ^/register$, roles: PUBLIC_ACCESS }
         - { path: ^/connexion$, roles: PUBLIC_ACCESS }
         - { path: ^/inscription$, roles: PUBLIC_ACCESS }
         - { path: ^/profil/, roles: PUBLIC_ACCESS }
         - { path: ^/publication/\d+$, roles: PUBLIC_ACCESS }
         - { path: ^/$, roles: PUBLIC_ACCESS }
-        - { path: ^/, roles: ROLE_USER }
-        
-        # 2. Absolument TOUT le reste du site (fil d'actualité, profils...) nécessite d'être connecté
+        # 2. Tout le reste du site nécessite d'être connecté
         - { path: ^/, roles: ROLE_USER }
 
 when@test:
