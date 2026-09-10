@@ -3,47 +3,34 @@
 namespace App\Form;
 
 use App\Entity\Publication;
-use App\Entity\Utilisateur;
-use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\FileType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Form\Extension\Core\Type\FileType;
-use Symfony\Component\Validator\Constraints\File;
 
 class PublicationType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('contenu')
-            ->add('photo', FileType::class, [
-                'label' => 'Ajouter une photo à votre message (Optionnel)',
-                'required' => false, // Rend le champ facultatif
-                'mapped' => false,   // Dit à Symfony de ne pas chercher à l'enregistrer tout seul en texte
-                'constraints' => [
-                    new File([
-                        'maxSize' => '500k',
-                        'mimeTypes' => [
-                            'image/jpeg',
-                            'image/png',
-                            'image/webp',
-                        ],
-                        'mimeTypesMessage' => 'Veuillez télécharger une image valide (Max 500 Ko, JPG, PNG ou WEBP).',
-                    ])
+            ->add('contenu', TextareaType::class, [
+                'required' => false,
+                'label' => 'Contenu du message',
+                'attr' => ['placeholder' => 'Écrivez votre message ici...']
+            ])
+            ->add('visibilite', ChoiceType::class, [
+                'label' => 'Visibilité',
+                'choices' => [
+                    'Publique (Tout le monde)' => 'public',
+                    'Privée (Amis uniquement)' => 'friends',
                 ],
             ])
-            ->add('visibilite')            
-            // 'date_creation' et 'date_modification' sont gérés automatiquement en arrière-plan par le contrôleur
-            /* 
-                ->add('date_creation', null, [
-                    'widget' => 'single_text'
-                ])
-                ->add('date_modification')
-            */
-            ->add('utilisateur', EntityType::class, [
-                'class' => Utilisateur::class,
-                'choice_label' => 'id',
+            ->add('image_upload', FileType::class, [
+                'label' => 'Changer la photo (Optionnel)',
+                'required' => false,
+                'mapped' => false,
             ])
         ;
     }

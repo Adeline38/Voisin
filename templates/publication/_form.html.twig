@@ -1,4 +1,7 @@
-{{ form_start(form) }}
+{# {{ form_start(form) }} #}
+{# AJOUTEZ STRICTEMENT L'ATTRIBUT enctype ICI SI VOUS ÉCRIVEZ LE FORMULAIRE À LA MAIN #}
+<form method="POST" enctype="multipart/form-data">
     {{ form_widget(form) }}
-    <button class="btn">{{ button_label|default('Save') }}</button>
-{{ form_end(form) }}
+    <button class="btn">{{ button_label|default('Enregistrer') }}</button>
+{# {{ form_end(form) }} #}
+</form>

@@ -22,7 +22,15 @@
             <tr>
                 <td>{{ publication.id }}</td>
                 <td>{{ publication.contenu }}</td>
-                <td>{{ publication.photo }}</td>
+                {# Symfony a généré une ligne brute <td>{{ publication.photo }}</td> qui affiche uniquement du texte si le champ est rempli, ou rien s'il est vide.
+                <td>{{ publication.photo }}</td>#}
+                <td>
+                    {% if publication.photo %}
+                        <img src="{{ asset('uploads/' ~ publication.photo) }}" alt="Photo de la publication" style="max-width: 100px; max-height: 100px; border-radius: 4px; object-fit: cover;">
+                    {% else %}
+                        <span style="font-style: italic;">Pas de photo</span>
+                    {% endif %}
+                </td>
                 <td>{{ publication.visibilite }}</td>
                 <td>{{ publication.dateCreation ? publication.dateCreation|date('Y-m-d H:i:s') : '' }}</td>
                 <td>{{ publication.dateModification ? publication.dateModification|date('Y-m-d H:i:s') : '' }}</td>

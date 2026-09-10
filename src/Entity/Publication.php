@@ -9,6 +9,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PublicationRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Publication
 {
     #[ORM\Id]
@@ -188,5 +189,17 @@ class Publication
         }
 
         return $this;
+    }
+
+    // src/Entity/Publication.php
+
+    #[ORM\PrePersist] // Dit à l'ordinateur : "Exécute ce code juste avant l'écriture en base SQL"
+    // En ajoutant #[ORM\PrePersist], on crée une sécurité absolue. Même si votre formulaire ou votre contrôleur s'emmêlent les pinceaux, Doctrine va intercepter l'objet juste avant l'insertion SQL, va remarquer que la colonne date_creation est vide, et va y injecter un objet DateTimeImmutable tout neuf du jour. L'erreur 1048 Column 'date_creation' cannot be null devient techniquement impossible.
+    public function setInitialisationDateCreation(): void
+    {
+        // Si le contrôleur a oublié de mettre une date, on force la date du jour automatiquement
+        if ($this->date_creation === null) {
+            $this->date_creation = new \DateTimeImmutable();
+        }
     }
 }
